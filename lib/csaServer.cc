@@ -616,7 +616,7 @@ playGames(int num_games)
     my_last_move = osl::Move();
     
     // new game
-    Logging::notice("^new game");
+    Logging::notice("^new game: " + to_s(i+1) + " / " + to_s(num_games));
     io->post(std::bind(&Coordinator::newGameStart, coordinator));
     while (1) {
       osl::NumEffectState current = game.state;
