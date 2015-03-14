@@ -610,6 +610,8 @@ playGames(int num_games)
     }
     current_status = Initializing;
     game_history.clear();
+    go_positions.clear();
+    bestmove_history.clear();
     if (! waitOpponent(i)) 
       goto cleanup;
     current_status = Idle;
