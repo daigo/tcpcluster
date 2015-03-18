@@ -638,6 +638,17 @@ playGames(int num_games)
 	}
 	if (csa_info != "" && config.send_info)
 	  msg += ",'* " + csa_info;
+
+	// Think for more than 1.8 secs
+	const double margin = (game_history.size() > 30) ? 1.8 : 0.8;
+	const double elapsed = osl::elapsedSeconds(last_move_time);
+	if (elapsed < margin) {
+	  Logging::notice("sleep "+to_s((int)((margin-elapsed)*1000))
+			  +"before sending a move");
+	  std::this_thread::sleep_for(std::chrono::milliseconds
+				      ((int)((margin-elapsed)*1000)));
+	}
+
 	connection->writeLine(msg);
 	Logging::notice("S> " + msg);
 	current_status = Idle;
