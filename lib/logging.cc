@@ -94,7 +94,7 @@ void gpsshogi::
 Logging::info(const std::string& msg, bool important)
 {
   const std::string now = time();
-  schedule(now + " info " + msg, log_queue, os, important);
+  schedule(now + " info " + msg, log_queue, true, important);
 }
 
 void gpsshogi::
