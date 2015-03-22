@@ -29,8 +29,15 @@ std::string gpsshogi::Logging::directory = ".";
 void gpsshogi::
 Logging::rebind(std::ostream *o)
 {
-  os = o;
+  if (log_queue && !debug) {
+    log_queue->post(log_strand->wrap([o](){
+                      os = o;
+                    }));
+  } else {
+    os = o;
+  }
 }
+
 void gpsshogi::
 Logging::setQueue(boost::asio::io_service& queue)
 {
