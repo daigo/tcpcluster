@@ -28,6 +28,11 @@ SlaveManager(boost::asio::io_service &i,
 gpsshogi::SlaveManager::
 ~SlaveManager()
 {
+  try {
+    acceptor.close();
+  } catch (...) {
+    // ignore
+  }
 }
 
 bool gpsshogi::SlaveManager::
