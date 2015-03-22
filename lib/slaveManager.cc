@@ -87,6 +87,7 @@ handleAccept(const boost::system::error_code& ec,
 		   + "give slave_tlp>=1 to skip this test.");
     return;
   }
+  Logging::info("%accepted a new client " + to_s(address));
   slave->start();
 }
 
