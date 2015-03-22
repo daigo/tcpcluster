@@ -23,7 +23,7 @@ namespace gpsshogi
     boost::ptr_vector<std::thread> threads;
     std::map<int,std::function<void(void)> > stop_handler;
     int expected_slaves, parallel_io;
-    std::unique_ptr<std::ostream> log_file, log_file_in_game;
+    std::shared_ptr<std::ostream> log_file, log_file_in_game;
     std::unique_ptr<SearchTree> tree;
     int last_position;
     volatile bool quitting;

@@ -37,7 +37,7 @@ Coordinator(UpStream *u, int e, int p, const std::string& udp_dst,
   
   u->bind(*this, search_io);
   Logging::setQueue(slave_io);
-  Logging::rebind(log_file.get());
+  Logging::rebind(log_file);
   if (udp_dst != "")
     Logging::startUdpLogging(udp_dst, slave_io);
   Logging::enableSlaveUdp(slave_udp);
@@ -126,7 +126,7 @@ newGameStart()
   Logging::setPrefix("0th");
   log_file_in_game.reset
     (new std::ofstream((Logging::path()+"cluster-game.log").c_str()));
-  Logging::rebind(log_file_in_game.get());
+  Logging::rebind(log_file_in_game);
   *log_file << "see game log in " << Logging::path() << "\n" << std::flush;
   if (tree)
     tree.reset();
@@ -136,7 +136,7 @@ void gpsshogi::Coordinator::gameFinished()
   if (tree)
     tree->gameFinished();
   Logging::udpLine("game finished");
-  Logging::rebind(log_file.get());
+  Logging::rebind(log_file);
   log_file_in_game.reset();
 }
 

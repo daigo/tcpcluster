@@ -14,7 +14,7 @@ namespace gpsshogi
     static void notice(const std::string& msg);
     static void info(const std::string& msg, bool important=false);
 
-    static void rebind(std::ostream *os);
+    static void rebind(std::shared_ptr<std::ostream> os);
     static void setQueue(boost::asio::io_service& queue);
     static const std::string datetime();
     static const std::string time();

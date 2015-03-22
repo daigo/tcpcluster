@@ -17,7 +17,7 @@
 static const int debug = false;
 static const bool flush_log = false;
 static std::mutex log_mutex;
-static std::ostream *os = 0;
+static std::shared_ptr<std::ostream> os;
 static boost::asio::io_service *log_queue = 0;
 static std::unique_ptr<boost::asio::ip::udp::socket> udp_socket;
 static std::unique_ptr<boost::asio::ip::udp::endpoint> udp_endpoint;
@@ -27,7 +27,7 @@ static std::string prefix;
 std::string gpsshogi::Logging::directory = ".";
 
 void gpsshogi::
-Logging::rebind(std::ostream *o)
+Logging::rebind(std::shared_ptr<std::ostream> o)
 {
   if (log_queue && !debug) {
     log_queue->post(log_strand->wrap([o](){
@@ -200,7 +200,7 @@ Logging::quit()
   std::lock_guard<std::mutex> lk(log_mutex);
   udp_socket.reset();
   udp_endpoint.reset();
-  os = 0;
+  os.reset();
 }
 
 std::string gpsshogi::
