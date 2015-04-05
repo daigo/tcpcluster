@@ -28,6 +28,7 @@ Coordinator(UpStream *u, int e, int p, const std::string& udp_dst,
     last_position(-1), quitting(false)
 {
   osl::OslConfig::setUp();
+  osl::OslConfig::showOslHome();
   osl::search::InterimReport::info = [](std::string msg) { Logging::info(msg); };
   osl::search::InterimReport::warn = [](std::string msg) { Logging::warn(msg); };
   osl::search::InterimReport::error = [](std::string msg) { Logging::error(msg); };
