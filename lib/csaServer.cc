@@ -309,7 +309,7 @@ public:
 
 gpsshogi::CsaServer::
 CsaServer(const CsaConfig& c)
-  : verbose(true), config(c)
+  : verbose(true), config(c), last_cooldown_interval(0)
 {
   config.send_info |= (config.servername == "wdoor.c.u-tokyo.ac.jp");
   current_status = WaitConnection;
@@ -556,14 +556,7 @@ CsaServer::makeMoveFromServer()
 	my_last_score = 0;
 	game.state.makeMove(move);
 	game.time_used[move.player()] += seconds;
-	double margin = (game_history.size() > 30) ? 1.8 : 0.8;
-	double elapsed = osl::elapsedSeconds(last_move_time);
-	if (elapsed < margin) {
-	  Logging::notice("sleep "+to_s((int)((margin-elapsed)*1000))
-			  +"ms for "+osl::csa::show(move));
-	  std::this_thread::sleep_for(std::chrono::milliseconds
-				      ((int)((margin-elapsed)*1000)));
-	}
+	coolDown();
 	last_move_time = osl::clock::now();
 	io->post(std::bind(&Coordinator::moveRoot, coordinator,
 			     osl::usi::show(move)));
@@ -616,6 +609,7 @@ playGames(int num_games)
       goto cleanup;
     current_status = Idle;
     my_last_move = osl::Move();
+    last_cooldown_interval = 0;
     
     // new game
     Logging::notice("^new game: " + to_s(i+1) + " / " + to_s(num_games));
@@ -639,16 +633,7 @@ playGames(int num_games)
 	if (csa_info != "" && config.send_info)
 	  msg += ",'* " + csa_info;
 
-	// Think for more than 1.8 secs
-	const double margin = (game_history.size() > 30) ? 1.8 : 0.8;
-	const double elapsed = osl::elapsedSeconds(last_move_time);
-	if (elapsed < margin) {
-	  Logging::notice("sleep "+to_s((int)((margin-elapsed)*1000))
-			  +"before sending a move");
-	  std::this_thread::sleep_for(std::chrono::milliseconds
-				      ((int)((margin-elapsed)*1000)));
-	}
-
+        coolDown();
 	connection->writeLine(msg);
 	Logging::notice("S> " + msg);
 	current_status = Idle;
@@ -704,7 +689,7 @@ searchBestMove()
   usi_state.reset(game.state.initialState(), game.state.history());
   TimeCondition seconds;
   seconds.total = game.seconds;
-  seconds.byoyomi_msec = game.byoyomi*1000;
+  seconds.byoyomi_msec = std::max(game.byoyomi*1000-last_cooldown_interval*1000, 0.0);
   seconds.used = game.time_used[game.my_turn];
   seconds.opponent_used = game.time_used[alt(game.my_turn)];
   seconds.allow_ponder = config.ponder;
@@ -767,6 +752,19 @@ outputSearchProgress(int position_id, const std::string& msg)
   else
     Logging::info(ss.str());
   last_report = now;
+}
+
+void gpsshogi::CsaServer::
+coolDown()
+{
+  const double margin = (game_history.size() > 30) ? 1.8 : 0.8;
+  const double elapsed = osl::elapsedSeconds(last_move_time);
+  last_cooldown_interval = std::max(margin-elapsed, 0.0);
+  if (last_cooldown_interval > 0) {
+    const int ms = last_cooldown_interval * 1000;
+    Logging::notice("sleep "+to_s(ms)+"ms");
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+  }
 }
 
 // ;;; Local Variables:

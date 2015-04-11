@@ -92,6 +92,7 @@ namespace gpsshogi
     std::string deffered_input;
     std::vector<std::tuple<int,osl::Move,int> > game_history;
     osl::time_point last_move_time;
+    double last_cooldown_interval;
   public:
     explicit CsaServer(const CsaConfig&);
     ~CsaServer();
@@ -105,6 +106,7 @@ namespace gpsshogi
     void logDisconnected();
     bool makeMoveFromServer();
     osl::Move searchBestMove();
+    void coolDown();
   };
 
 }
