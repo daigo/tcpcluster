@@ -154,7 +154,7 @@ gpsshogi::SearchNode::
   for (value_type& c: succ)
     if (c.second) {
       if (c.second->parent && c.second->parent != this)
-	Logging::error("parent inconsistent "+path()+" -- "+c.first);
+	Logging::error(snid.str() + " parent inconsistent "+path()+" -- "+c.first);
       c.second->parent = 0;
     }
 }
@@ -173,7 +173,7 @@ successor(const std::string& move)
 {
   osl::Move osl_move = findMove(move);
   if (osl_move.isInvalid()) {
-    Logging::error("| "+path()+" no osl move " + move);
+    Logging::error(snid.str() + " | "+path()+" no osl move " + move);
     assert(0);
   }
   assert(! osl_move.isInvalid()); // not always isNormal e.g., %KACHI
@@ -197,20 +197,20 @@ successor(const std::string& move)
 	if (node->leaf.pv_hint.size() > hint_max)
 	  node->leaf.pv_hint.resize(hint_max);
 	if (node->leaf.pv_hint.size() >= 4)
-	  Logging::info("|set long pv_hint at "+path()+" for "+toCSA(move)
+	  Logging::info(snid.str() + " |set long pv_hint at "+path()+" for "+toCSA(move)
 			+ " " +to_s(round(elapsed*2)/2.0) + "s "
 			+ boost::algorithm::join(node->leaf.pv_hint, " "));
       }
       if (node->leaf.pv_hint.empty()) {
 	PVInfo new_pv = findAlternative(move);
 	if (! new_pv.empty() && new_pv[0] != move) {
-	  Logging::error("|error1 at " + path() + " " + move + "!="+new_pv[0]);
+	  Logging::error(snid.str() + " |error1 at " + path() + " " + move + "!="+new_pv[0]);
 	  new_pv.clear();
 	}
 	if (new_pv.empty()) {
 	  new_pv = findAlternativeInOther(move);
 	  if (! new_pv.empty() && new_pv[0] != move) {
-	    Logging::error("|error2 at " + path() + " " + move
+	    Logging::error(snid.str() + " |error2 at " + path() + " " + move
 			   + "!="+new_pv[0]);
 	    new_pv.clear();
 	  }	  
@@ -221,7 +221,7 @@ successor(const std::string& move)
 	    int hint_max = (new_pv.elapsed > 4*probe_msec/1000.0) ? 4 : 2;
 	    if (new_pv.size() > hint_max)
 	      new_pv.moves.resize(hint_max);
-	    Logging::info("|migration from subpv at "+path()+" for "+move
+	    Logging::info(snid.str() + " |migration from subpv at "+path()+" for "+move
 			  + " " +to_s(round(new_pv.elapsed*2)/2.0) + "s "
 			  + boost::algorithm::join(new_pv.moves, " "));
 	    node->leaf.pv_hint = new_pv.moves;
@@ -268,10 +268,10 @@ successorOther()
   if (! node) 
     node.reset(new SearchNode(position, key, this, "other", ignore_moves));
   else if (node->ignore_moves != ignore_moves) {
-    Logging::info("|adjust other " + path() + ' ' +toCSA(node->ignore_moves)
+    Logging::info(snid.str() + " |adjust other " + path() + ' ' +toCSA(node->ignore_moves)
 		  + " => " + toCSA(ignore_moves));
     if (node->leaf.working[0])
-      Logging::error("|adjust other in working"
+      Logging::error(snid.str() + " |adjust other in working"
 		     +node->leaf.working[0]->idMark());
     node->ignore_moves = ignore_moves;
     // node->sub = node->main;
@@ -289,7 +289,7 @@ prepareProbe(slave_set_t& stopped)
     std::string msg = "|conflict in probe " + path();
     for (int id: worked)
       msg += " "+to_s(id);
-    Logging::error(msg+" restartcancel "+to_s(restart_cancelled.size())+" "+to_s(waited.size()));
+    Logging::error(snid.str() + " "+msg+" restartcancel "+to_s(restart_cancelled.size())+" "+to_s(waited.size()));
     stopped.insert(worked.begin(), worked.end());
   }
   probe.clear();
@@ -307,7 +307,7 @@ prepareProbe(slave_set_t& stopped)
 	probe.target.push_back(move);
       else
 	ignored += " "+move;
-    Logging::info("|prepareProbe " + path() + " with children #"
+    Logging::info(snid.str() + " |prepareProbe " + path() + " with children #"
 		  + to_s(succ.size()) + ignored);    
   }
   if (! leaf.pv_hint.empty()) {
@@ -318,7 +318,7 @@ prepareProbe(slave_set_t& stopped)
       if (p != probe.target.end()) {
 	std::rotate(probe.target.begin(), p, p+1);
 	if (probe.target[0] != first)
-	  Logging::error("rotate failed "+first);
+	  Logging::error(snid.str() + " rotate failed "+first);
       }
     }
   }
@@ -329,7 +329,7 @@ findLeaf(const std::string& position)
 {
   SearchNode *ret = find(position);
   if (ret && ! ret->isLeaf()) {
-    Logging::error("|findLeaf failed " + position + " in "
+    Logging::error(snid.str() + " |findLeaf failed " + position + " in "
 		   + ret->position + "ignore_moves " + ret->ignore_moves);
     return 0;
   }
@@ -456,7 +456,7 @@ update(const std::string& move, const InterimReport& child,
 	&& best_move != ""
 	&& abs(main.pv.score - v.second->value()) < accept_other_margin) {
       if (! parent) 
-	Logging::info("rejected other "+best_move+" "+to_s(main.pv.score)
+	Logging::info(snid.str() + " rejected other "+best_move+" "+to_s(main.pv.score)
 		      +" v.s. other "
 		      +(v.second->pv().empty() ? "" : v.second->pv()[0])
 		      +" "+to_s(v.second->value()));
@@ -492,7 +492,7 @@ update(const std::string& move, const InterimReport& child,
 
   if (! moves.draw.empty() && main.pv.score == draw_value
       && best_move == *moves.draw.begin())
-    Logging::info("|"+path()+" preferred draw " + best_move
+    Logging::info(snid.str() + " |"+path()+" preferred draw " + best_move
 		  + " " + to_s(draw_value));
 
   // root
@@ -522,7 +522,7 @@ prepareSplit()
   committed = true;
   setWorking();
   if (main.node_count < sub.node_count/2)
-    Logging::info("|"+path()+" node_count main < sub " + to_s(main.node_count)
+    Logging::info(snid.str() + " |"+path()+" node_count main < sub " + to_s(main.node_count)
 		  + " " + to_s(sub.node_count));
   sub = main;
   main = InterimReport();
@@ -534,19 +534,19 @@ prepareSplit()
     typedef successor_table_t::value_type pair_t;
     for (pair_t& v: probe.probed)
       msg += " "+v.first;
-    Logging::info("|has past probe "+path()+msg);
+    Logging::info(snid.str() + " |has past probe "+path()+msg);
   }
   std::string added = "";
   for (const std::string& move: probe.target) {
     if (hasMove(move)) {
       SearchNodePtr node = succ[move];
       if (node->leaf.working[0]) {
-	Logging::warn("|inconsistent probe management"
+	Logging::warn(snid.str() + " |inconsistent probe management"
 		      + node->path() + " "+node->leaf.working[0]->idMark());
 	continue;
       }
       if (node->leaf.working[1]) {
-	Logging::info("|node moved when mate solver working"
+	Logging::info(snid.str() + " |node moved when mate solver working"
 		      + node->leaf.working[1]->idMark());
 	node->leaf.working[1].reset();
       }
@@ -559,7 +559,7 @@ prepareSplit()
       }
     }
   }
-  Logging::info("|erase from successor "+path()+added);
+  Logging::info(snid.str() + " |erase from successor "+path()+added);
   if (hasOther()) {
     probe.probed["other"] = succ["other"];
     succ.erase("other");
@@ -640,7 +640,7 @@ sortByProbe(std::vector<int> *evals) const
     }
   }
   if (new_probed.size() != probe.probed.size()) {
-    Logging::info("|sortByProbe "+to_s(new_probed.size())
+    Logging::info(snid.str() + " |sortByProbe "+to_s(new_probed.size())
 		  +" "+to_s(probe.probed.size())+" excluded "+excluded);
   }
   std::vector<std::string> result
@@ -668,7 +668,7 @@ sortByTable(const successor_table_t& table, std::vector<int> *evals) const
   for (const pair_t& v: table) {
     const int neg_preference = -v.second->value()*sign;
     if (v.first == "other" && v.second->pv().empty()) {
-      Logging::info("|"+path()+" skipped other of empty pv");
+      Logging::info(snid.str() + " |"+path()+" skipped other of empty pv");
       continue;
     }
     const std::string move = v.first == "other"
@@ -676,7 +676,7 @@ sortByTable(const successor_table_t& table, std::vector<int> *evals) const
     if (move == "resign")
       continue;
     if (move == "pass" || move == "win") {
-      Logging::error("|sortByTable unexpected move " + move + ' ' + v.first);
+      Logging::error(snid.str() + " |sortByTable unexpected move " + move + ' ' + v.first);
       continue;
     }
     sorted.push_back(std::make_pair(neg_preference, move));
@@ -687,7 +687,7 @@ sortByTable(const successor_table_t& table, std::vector<int> *evals) const
   for (size_t i=0; i<sorted.size(); ++i) {    
     std::string move = sorted[i].second;
     if (std::count(ret.begin(), ret.end(), move))
-      Logging::info("|"+path()+" duplicated moves "+move);
+      Logging::info(snid.str() + " |"+path()+" duplicated moves "+move);
     else {
       ret.push_back(move);
       if (evals)
@@ -695,7 +695,7 @@ sortByTable(const successor_table_t& table, std::vector<int> *evals) const
     }
   }
   if (sorted.size() < 2)
-    Logging::info("|sortByTable " + to_s(sorted.size()) + ' ' + to_s(ret.size())
+    Logging::info(snid.str() + " |sortByTable " + to_s(sorted.size()) + ' ' + to_s(ret.size())
 		  +' '+to_s(moves.normal.size())+' '+to_s(moves.usi.size()));
   return ret;
 }
@@ -749,7 +749,7 @@ showStatus(std::ostream& os, osl::HistoryState& state,
        << "s)";
   os << "\n";
   if (&data == &main && leaf.working[0] && leaf.working[0]->id() != data.owner)
-    Logging::warn("|worker inconsistent "+path()+' '
+    Logging::warn(snid.str() + " |worker inconsistent "+path()+' '
 		  +to_s(leaf.working[0]->id())+" != "+to_s(data.owner));
 
   if (parent && isSolved())
@@ -796,7 +796,7 @@ showStatus(std::ostream& os, osl::HistoryState& state,
 	state.unmakeMove();
     }
     catch (std::exception& e) {
-      Logging::error("|showStatus tree corruption "+c.second->parent_move+" "+e.what()+" in \n"
+      Logging::error(snid.str() + " |showStatus tree corruption "+c.second->parent_move+" "+e.what()+" in \n"
 		     +to_s(state.state()));
     }
   }
@@ -813,7 +813,7 @@ stopSubTree(slave_set_t& stopped, slave_set_t& restart_cancelled,
       if (slave->stop(id()))	   // node id
 	stopped.insert(slave->id()); // slave id
       else
-	Logging::warn("|stop send failure"+slave->idMark());
+	Logging::warn(snid.str() + " |stop send failure"+slave->idMark());
       slave.reset();
     }
   }
@@ -848,7 +848,7 @@ stopProbe(slave_set_t& waited)
     probe.probing.clear();
   }
   if (! ps.empty() || ! pp.empty())
-    Logging::info("| stop "+path+(ps.empty() ? "" : " split_waiting "+join(ps, " "))
+    Logging::info(snid.str() + " | stop "+path+(ps.empty() ? "" : " split_waiting "+join(ps, " "))
 		  +(pp.empty() ? "" : " probing "+ join(pp, " ")));
 }
 
@@ -856,7 +856,7 @@ void gpsshogi::SearchNode::
 generateMoves()
 {
   if (! moves.empty()) {
-    Logging::info("| moves already generated "+path());
+    Logging::info(snid.str() + " | moves already generated "+path());
     return;
   }
   osl::UsiState usi_state;
@@ -908,10 +908,10 @@ generateMoves()
   }
 
   if (! moves.draw.empty()) {
-    Logging::info("|"+path()+" has draw move(s) " + *moves.draw.begin());
+    Logging::info(snid.str() + " |"+path()+" has draw move(s) " + *moves.draw.begin());
   }
   if (moves.normal.empty()) {
-    Logging::info("|"+path()+" has no normal move");
+    Logging::info(snid.str() + " |"+path()+" has no normal move");
     moves.normal.insert(moves.normal.end(),
 			moves.loss.begin(), moves.loss.end());
     moves.normal.insert(moves.normal.end(),
@@ -937,7 +937,7 @@ generateMoves()
     heuristic_cost = enterKingBonus24(state); // absolute value
   }
   if (heuristic_cost)
-    Logging::info("|near enter heuristic "+path()+" "+to_s(heuristic_cost));
+    Logging::info(snid.str() + " |near enter heuristic "+path()+" "+to_s(heuristic_cost));
   if (moves.win.empty()) {
     osl::NumEffectState s = usi_state.currentState();
     osl::checkmate::FixedDepthSearcher solver(s);
@@ -947,7 +947,7 @@ generateMoves()
       moves.win.insert(osl::usi::show(checkmate_move));
   }
   if (! moves.win.empty() && solved.node_count == 0) {
-    Logging::info("|"+path()+" winning node");
+    Logging::info(snid.str() + " |"+path()+" winning node");
     solved.node_count = 1;
     solved.pv.score = winValue(1);
     solved.pv.push_back(*moves.win.begin());
@@ -959,12 +959,12 @@ generateMoves()
     solved.node_count = 1;
     solved.pv.clear();
     if (! moves.hasDraw()) {
-      Logging::info("|"+path()+" losing node");
+      Logging::info(snid.str() + " |"+path()+" losing node");
       solved.pv.score = -winValue(1);
       solved.pv.push_back("resign");
     }
     else {
-      Logging::info("|"+path()+" draw node");
+      Logging::info(snid.str() + " |"+path()+" draw node");
       solved.pv.score = draw_value;
       solved.pv.push_back(*moves.draw.begin());
     }
@@ -991,7 +991,7 @@ searchInLeaf(std::function<void(InterimReport)> progress,
   if (msec > probe_msec)
     committed = true;
   if (hasWorker())
-    Logging::error("|searchInLeaf slave conflict "+path()
+    Logging::error(snid.str() + " |searchInLeaf slave conflict "+path()
 		   +(leaf.working[0] ? leaf.working[0]->idMark() : "?"
 		     +(slave ? slave->idMark() : "?")));
   if (! succ.empty() || hasWorker()) {
@@ -1001,13 +1001,13 @@ searchInLeaf(std::function<void(InterimReport)> progress,
 		    +' '+to_s(stopped_slave.size())+" "
       +to_s(restart_cancelled.size())+" "+to_s(waited.size());
     if (!waited.empty() || !restart_cancelled.empty())
-      Logging::error(msg);
+      Logging::error(snid.str() + " " + msg);
     else
-      Logging::notice(msg);
+      Logging::notice(snid.str() + " " + msg);
     succ.clear();
   }
   if (main.owner != -1 && main.owner != slave->id()) {
-    Logging::info("|ownership changed "+path()+" "+to_s(main.owner)
+    Logging::info(snid.str() + " |ownership changed "+path()+" "+to_s(main.owner)
 		  +" =>"+slave->idMark());
     main.owner = slave->id();
   }
@@ -1025,7 +1025,7 @@ runMate(std::function<void(std::string)> finish,
 	int msec, UsiSlavePtr solver)
 {
   if (leaf.working[1]) {
-    Logging::error("|run mate slave conflict "+path()
+    Logging::error(snid.str() + " |run mate slave conflict "+path()
 		   +leaf.working[1]->idMark()+solver->idMark());
     return;
   }

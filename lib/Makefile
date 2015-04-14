@@ -11,7 +11,7 @@ CC = $(CXX)
 
 OBJS = slaveManager.o coordinator.o usiSlave.o usiServer.o usiStatus.o \
   searchTree.o searchNode.o logging.o upStream.o csaServer.o \
-  inaniwa.o
+  inaniwa.o idGenerator.o
 SRCS = $(OBJS:.o=.cc)
 
 libtcpcluster.a : $(OBJS)

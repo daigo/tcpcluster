@@ -4,6 +4,7 @@
 #define GPSSHOGI_SEARCHNODE_H
 
 #include "interimReport.h"
+#include "idGenerator.h"
 #include "osl/hashKey.h"
 #include "osl/state/historyState.h"
 #include "osl/misc/milliSeconds.h"
@@ -15,6 +16,8 @@
 
 namespace gpsshogi
 {
+  class SearchNodeID : public IDGenerator<'S','N'> {};
+
   typedef std::set<int> slave_set_t;
   class UsiSlave;
   typedef std::shared_ptr<UsiSlave> UsiSlavePtr;
@@ -93,6 +96,7 @@ namespace gpsshogi
     bool has_workers, mate_tested;
     bool committed;
     int take_back_moves;
+    SearchNodeID snid;
 
     SearchNode(const std::string& po, const osl::HashKey& k,
 	       SearchNode *pa, const std::string& pm, const std::string& i="");
