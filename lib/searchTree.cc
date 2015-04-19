@@ -200,6 +200,7 @@ void gpsshogi::SearchTree::
 probeFinish(UsiSlavePtr slave, std::string node_id, InterimReport report) 
 {
   SearchNode *node = root ? root->findLeaf(node_id) : 0;
+  Logging::info("*probe finished: " + node->getSnid());
   if (slave->error()) {
     Logging::error("*ignored probe by disconnected slave " + node_id
 		   + slave->idMark());
@@ -452,6 +453,7 @@ go(int id, const std::string& position,
   SearchStatus new_status;
   new_status.position_id = id;
   new_status.config = config;
+  // TODO: daigo
   new_status.sufficient_ponder = searching().sufficient_ponder;
   if (config.used >= config.total) {
     new_status.msec_standard = config.byoyomi_msec;
@@ -777,12 +779,12 @@ probeAndSplit(SearchNode& node, std::vector<UsiSlavePtr> slaves)
 	slaves.resize(slaves.size()-half.size());
       }
       Logging::info("*early split "+path+" "+node.toCSA(split_move)
-		    + "#" + to_s(half.size())
+		    + " #" + to_s(half.size())
 		    + " and other #"+to_s(slaves.size()));
       node.committed = true;
       probeAndSplit(*node.successor(split_move), half);
       node.probe.removeTarget(split_move);
-      node.probe.removeTarget(split_move);
+      node.probe.removeTarget(split_move); // TODO: ???
       Logging::info("*removed target "+split_move+" "
 		    +to_s(std::count(node.probe.target.begin(), 
 				     node.probe.target.end(), split_move))
@@ -1435,7 +1437,7 @@ expandOther()
   std::vector<UsiSlavePtr> slaves = idleSlaves();
   Logging::notice("*panic time extension for "
 		  +root->toCSA(root->expanded_other_pv.back()[0])
-		  +" by "+to_s(slaves.size()));
+		  +" by "+to_s(slaves.size()) + " slaves");
   const bool need_other = (root->moves.normal.size() > root->succ.size());
   // restart other before creation of n for stop consistency
   SearchNodePtr other = root->successorOther();
@@ -1546,14 +1548,18 @@ growTree(SearchNode& node, std::vector<UsiSlavePtr> slaves)
 	return;
       }
       UsiSlavePtr slave = root->leaf.working[0];
+      Logging::info("*root schedule other with " + to_s(slave));
       stopSubTree(*root);
       root->prepareSplit();
       scheduleOther(root, slave);
     }
     else {
+      // TODO daigo
       if (root->hasOther()
-	  && root->successorOther()->hasLeafWorker())
+	  && root->successorOther()->hasLeafWorker()) {
+        Logging::info("*root restart other");
 	restartOther(root->successorOther());
+      }
     }
     growTree(*root->successor(root->bestMove()), slaves);
     return;
@@ -1842,9 +1848,12 @@ moveRoot(const std::string& move,
   }
 
   Logging::setPrefix(to_s(state.moves.size()+1)+"th");
+  // TODO: daigo >=1
   if (ponder && (stopped_slave.size()+current_idle.size())>1
-      && searching().sufficient_ponder == "")
+      && searching().sufficient_ponder == "") {
+    Logging::info("GrowTree booked");
     task_queue.push_back(GrowTree);
+  }
   {
     std::ostringstream ss;
     if (! state.moves.empty())
@@ -1860,6 +1869,7 @@ moveRoot(const std::string& move,
        << " idle " << current_idle.size()
        << " mateidle " << mate_idle.size()
        << " status " << to_s(status);
+    ss << "\n" << "sufficient ponder: " << searching().sufficient_ponder;
     Logging::info(ss.str());
   }
 }
