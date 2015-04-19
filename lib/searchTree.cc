@@ -453,8 +453,6 @@ go(int id, const std::string& position,
   SearchStatus new_status;
   new_status.position_id = id;
   new_status.config = config;
-  // TODO: daigo
-  new_status.sufficient_ponder = searching().sufficient_ponder;
   if (config.used >= config.total) {
     new_status.msec_standard = config.byoyomi_msec;
     new_status.msec_max = config.byoyomi_msec;
@@ -1247,8 +1245,8 @@ finishIfStable()
   osl::time_point now = osl::clock::now();
   int elapsed = osl::msec(now-started());
   bool finish_search = false;
-  if (searching().sufficient_ponder != ""
-      && searching().sufficient_ponder == root->bestMove()) {
+  if (prev().sufficient_ponder != ""
+      && prev().sufficient_ponder == root->bestMove()) {
     finish_search = true;
   }
   if (! finish_search
