@@ -1846,8 +1846,8 @@ moveRoot(const std::string& move,
   }
 
   Logging::setPrefix(to_s(state.moves.size()+1)+"th");
-  // TODO: daigo >=1
-  if (ponder && (stopped_slave.size()+current_idle.size())>1
+  const int minimum_size = all_slave.size() < 10 ? 1 : 2;
+  if (ponder && (stopped_slave.size()+current_idle.size())>=minimum_size
       && searching().sufficient_ponder == "") {
     Logging::info("GrowTree booked");
     task_queue.push_back(GrowTree);
