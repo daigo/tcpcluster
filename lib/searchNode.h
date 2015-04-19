@@ -96,7 +96,7 @@ namespace gpsshogi
     bool has_workers, mate_tested;
     bool committed;
     int take_back_moves;
-    SearchNodeID snid;
+    const SearchNodeID snid;
 
     SearchNode(const std::string& po, const osl::HashKey& k,
 	       SearchNode *pa, const std::string& pm, const std::string& i="");
@@ -106,6 +106,7 @@ namespace gpsshogi
     SearchNodePtr successorOther();
 
     int id() const { return key.signature() + ignore_moves.size(); }
+    std::string getSnid() const { return snid.str(); }
     bool isLeaf() const { return succ.empty(); }
     bool hasMove(const std::string& move) const { 
       return succ.count(move) && succ.find(move)->second;
