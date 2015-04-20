@@ -1216,7 +1216,7 @@ uint64_t gpsshogi::SearchTree::recentNodeCountBest() const {
   for (size_t i=0; i+3<std::min(stable_size+3,history.size()); ++i)
     if (history[history.size()-i-1].last_status != PanicTimeOther
 	&& ! history[history.size()-i-1].forced_move_or_similar
-	&& history[history.size()-i-1].sufficient_ponder == ""
+	&& history[history.size()-i-2].sufficient_ponder == ""
 	&& ! history[history.size()-i-1].in_check)
       ret.push_back(history[history.size()-i-1].node_count_best);
   if (ret.size() <= 1)
@@ -1245,8 +1245,7 @@ finishIfStable()
   osl::time_point now = osl::clock::now();
   int elapsed = osl::msec(now-started());
   bool finish_search = false;
-  if (prev().sufficient_ponder != ""
-      && prev().sufficient_ponder == root->bestMove()) {
+  if (hasSufficientPonder()) {
     finish_search = true;
   }
   if (! finish_search
@@ -1848,7 +1847,7 @@ moveRoot(const std::string& move,
   Logging::setPrefix(to_s(state.moves.size()+1)+"th");
   const int minimum_size = all_slave.size() < 10 ? 1 : 2;
   if (ponder && (stopped_slave.size()+current_idle.size())>=minimum_size
-      && searching().sufficient_ponder == "") {
+      && !hasSufficientPonder()) {
     Logging::info("GrowTree booked");
     task_queue.push_back(GrowTree);
   }

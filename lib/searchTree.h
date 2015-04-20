@@ -186,6 +186,11 @@ namespace gpsshogi
 				  const osl::game_playing::GameState&) const;
     std::pair<int,int> assignTimeOSL
     (const TimeCondition&, const osl::game_playing::GameState&) const;
+
+    bool hasSufficientPonder() const {
+      const auto& ponder_result = prev().sufficient_ponder;
+      return ponder_result != "" && ponder_result == root->bestMove();
+    }
     static int draw_value_cp, human_rounding;
   };
 }
