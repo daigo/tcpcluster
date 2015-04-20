@@ -1551,11 +1551,11 @@ growTree(SearchNode& node, std::vector<UsiSlavePtr> slaves)
       scheduleOther(root, slave);
     }
     else {
-      // TODO daigo
       if (root->hasOther()
 	  && root->successorOther()->hasLeafWorker()) {
-        Logging::info("*root restart other");
-	restartOther(root->successorOther());
+        //Logging::info("*root restart other");
+	//restartOther(root->successorOther());
+        Logging::info("*carry on root other");
       }
     }
     growTree(*root->successor(root->bestMove()), slaves);
