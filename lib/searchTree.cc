@@ -200,7 +200,7 @@ void gpsshogi::SearchTree::
 probeFinish(UsiSlavePtr slave, std::string node_id, InterimReport report) 
 {
   SearchNode *node = root ? root->findLeaf(node_id) : 0;
-  Logging::info("*probe finished: " + node->getSnid());
+  Logging::info("*probe finished: " + (node ? node->getSnid() : ""));
   if (slave->error()) {
     Logging::error("*ignored probe by disconnected slave " + node_id
 		   + slave->idMark());
