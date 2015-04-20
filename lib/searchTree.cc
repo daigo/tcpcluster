@@ -1546,7 +1546,7 @@ growTree(SearchNode& node, std::vector<UsiSlavePtr> slaves)
 	return;
       }
       UsiSlavePtr slave = root->leaf.working[0];
-      Logging::info("*root schedule other with " + to_s(slave));
+      Logging::info("*root schedule other with " + slave->idMark());
       stopSubTree(*root);
       root->prepareSplit();
       scheduleOther(root, slave);
