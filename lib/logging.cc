@@ -12,6 +12,7 @@
 #include <iostream>
 #include <fstream>
 #include <ostream>
+#include <shared_mutex>
 
 // static const int debug = true;
 static const int debug = false;
@@ -24,6 +25,7 @@ static std::unique_ptr<boost::asio::ip::udp::endpoint> udp_endpoint;
 static bool slave_udp = false;
 static std::unique_ptr<boost::asio::strand> log_strand;
 static std::string prefix;
+static std::shared_timed_mutex mtx; // guard prefix
 std::string gpsshogi::Logging::directory = ".";
 
 void gpsshogi::
@@ -54,8 +56,11 @@ Logging::datetime()
   boost::posix_time::ptime now
     = boost::posix_time::microsec_clock::local_time();
   std::string ret = to_iso_extended_string(now);
-  if (prefix != "")
-    ret += " " + prefix;
+  {
+    std::shared_lock<std::shared_timed_mutex> lock(mtx);
+    if (prefix != "")
+      ret += " " + prefix;
+  }
   return ret;
 }
 
@@ -65,8 +70,11 @@ Logging::time()
   boost::posix_time::ptime now
     = boost::posix_time::microsec_clock::local_time();
   std::string ret = to_simple_string(now.time_of_day());
-  if (prefix != "")
-    ret += " " + prefix;
+  {
+    std::shared_lock<std::shared_timed_mutex> lock(mtx);
+    if (prefix != "")
+      ret += " " + prefix;
+  }
   return ret;
 }
 
@@ -232,6 +240,7 @@ Logging::setPrefix(std::string new_prefix)
 void gpsshogi::
 Logging::setPrefixInQueue(std::string new_prefix)
 {
+  std::lock_guard<std::shared_timed_mutex> lock(mtx);
   prefix = new_prefix;
 }
 
