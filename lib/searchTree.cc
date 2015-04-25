@@ -1174,7 +1174,7 @@ mateResult(UsiSlavePtr slave, std::string node_id, std::string msg)
 		  + slave->idMark() + warn);
     return;
   } 
-  Logging::info("*mate " +node->path() + " " + msg + slave->idMark());
+  Logging::info("*mate " + node->getSnid() + " " + node->path() + " " + msg + slave->idMark());
   if (node->leaf.working[1] && node->leaf.working[1] != slave) 
     Logging::info("*mate worker inconsistent" + slave->idMark()
 		  + (node->leaf.working[1]?node->leaf.working[1]->idMark():" ? "));
@@ -1195,7 +1195,7 @@ mateResult(UsiSlavePtr slave, std::string node_id, std::string msg)
       || moves[1] == "timeout" || node->isSolved())
     return;
   if (! node->findMove(moves[1]).isNormal()) {
-    Logging::error("*mate move does not exist " +node->path()+" "+msg);
+    Logging::error("*mate move does not exist " +node->getSnid() + " " + node->path()+" "+msg);
     return;
   }
   // mate found
@@ -1204,7 +1204,7 @@ mateResult(UsiSlavePtr slave, std::string node_id, std::string msg)
   node->solved.pv.moves = moves;
   node->solved.pv.moves.erase(node->solved.pv.moves.begin());
   if (!node->parent || !node->parent->probe.onGoing()) {
-    Logging::info("*stop by mate "+node->path());
+    Logging::info("*stop by mate "+node->getSnid() + " " + node->path());
     stopSubTree(*node);
   }
   node->update(progress);
