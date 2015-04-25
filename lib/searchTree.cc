@@ -1552,10 +1552,13 @@ growTree(SearchNode& node, std::vector<UsiSlavePtr> slaves)
     }
     else {
       if (root->hasOther()
-	  && root->successorOther()->hasLeafWorker()) {
-        //Logging::info("*root restart other");
-	//restartOther(root->successorOther());
-        Logging::info("*carry on root other");
+          && root->successorOther()->hasLeafWorker()) {
+        if (root->successorOther()->bestMove() == best_move) {
+          Logging::info("*restart the root other as it will be expanded");
+          restartOther(root->successorOther());
+        } else {
+          Logging::info("*carry on the root other");
+        }
       }
     }
     growTree(*root->successor(root->bestMove()), slaves);
