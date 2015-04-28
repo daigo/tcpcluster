@@ -1447,7 +1447,7 @@ expandOther()
   // expand n
   SearchNode& n = *root->successor(pv[0]);
   if (n.pv().empty() && n.leaf.pv_hint.empty()) 
-    Logging::error("extend: pv migration failed");
+    Logging::warn("extend: pv migration failed");
   std::string msg = "*extended "+pv[0]+" nodecount "+to_s(n.nodeCount())
     +" pv "+to_s(n.pv().size()) + ' '+n.report().joinPV()
     +" pvhint "+to_s(n.leaf.pv_hint.size());
