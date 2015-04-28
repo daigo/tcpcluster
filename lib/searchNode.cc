@@ -988,7 +988,7 @@ searchInLeaf(std::function<void(InterimReport)> progress,
 	     int msec, UsiSlavePtr slave,
 	     slave_set_t& stopped_slave, int multi_pv)
 {
-  Logging::info(snid.str() + " |searchInLeaf "+path()+" with "+slave->idMark() + " for " + to_s(msec) + "ms");
+  Logging::info(snid.str() + " |searchInLeaf "+path()+" with "+slave->idMark() + " for " + to_s(msec) + "ms " + ignoreMoves());
   if (msec > probe_msec)
     committed = true;
   if (hasWorker())
