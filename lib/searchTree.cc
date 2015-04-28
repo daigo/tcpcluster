@@ -367,7 +367,7 @@ assignTime(const TimeCondition& config,
     double t = (nmoves < tt) ? (tt - nmoves)/2+1 : 10; // distance to horizon
     if (a < 1.0 * left / t)
       a = 1.0 * left / t;
-    int hard = a*2 < left ? a*2 : left;
+    int hard = a*3 < left ? a*3 : left;
     return std::make_pair(a, hard);
   }
   if (left < 20) {
