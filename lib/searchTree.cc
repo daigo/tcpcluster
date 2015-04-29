@@ -1319,7 +1319,7 @@ finishIfStable()
     os << state.currentState();
     return;
   }
-  if (status == Thinking && elapsed > msec()
+  if ((status == Thinking || status == PanicTimeOther) && elapsed > msec()
       && root->bestMoveIsOther()) {
     tryExpandOther(elapsed);
   }
