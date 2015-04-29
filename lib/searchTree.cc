@@ -770,7 +770,9 @@ probeAndSplit(SearchNode& node, std::vector<UsiSlavePtr> slaves)
       }
       else {
 	int width = std::min(3, splitWidth(node.depth8()));
-	for (size_t i=1; i<slaves.size(); i+=width) // reserve [0]
+        // reserve [0] in case of 2 slaves so that the most powerfull slave
+        // takes an "other" move
+	for (size_t i=(slaves.size()>2 ? 0 : 1); i<slaves.size(); i+=width)
 	  half.push_back(slaves[i]); 
 	for (UsiSlavePtr slave: half)
 	  std::remove(slaves.begin(), slaves.end(), slave);
