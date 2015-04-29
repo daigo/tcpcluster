@@ -894,16 +894,15 @@ generateMoves()
       moves.draw.insert(usi);
     else if (std::count(loss.begin(), loss.end(), m.move()))
       moves.loss.insert(usi);
-    else {
+    else
       moves.normal.push_back(usi);
-      assert(state.inCheck() || ! m.move().ignoreUnpromote());
-      if (!state.inCheck() && m.move().hasIgnoredUnpromote()) {
+    assert(state.inCheck() || ! m.move().ignoreUnpromote());
+    if (!state.inCheck() && m.move().hasIgnoredUnpromote()) {
 	osl::Move nopromote = m.move().unpromote();
 	std::string nopromote_usi = osl::usi::show(nopromote);
 	moves.all.push_back(nopromote);
 	moves.usi.push_back(nopromote_usi);
 	moves.nopromote.insert(nopromote_usi);
-      }
     }
   }
 
