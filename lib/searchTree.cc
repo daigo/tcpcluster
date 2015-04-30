@@ -876,6 +876,25 @@ void gpsshogi::SearchTree::splitTree(SearchNode& node)
   std::vector<UsiSlavePtr> slaves;
   std::vector<int> evals;
   std::vector<std::string> moves = node.sortByProbe(&evals);
+
+  {
+    // Remove moves that have already assigned
+    std::ostringstream oss;
+    for (auto& child : node.succ) {
+      if (!child.second->hasWorker()) continue;
+
+      auto it = std::find(moves.begin(), moves.end(), child.first);
+      if (it == moves.end()) continue;
+
+      oss << node.toCSA(*it) << "@" << child.second->getSnid() << " ";
+      moves.erase(it);
+    }
+    const std::string msg = oss.str();
+    if (!msg.empty()) {
+      Logging::info("*split " + path + " removed assigned moves: " + msg);
+    }
+  }
+
   {
     std::string msg
       = "*split " + path + " " + to_s(osl::msec(node.split_time - started()))
