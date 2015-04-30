@@ -363,11 +363,12 @@ assignTime(const TimeCondition& config,
   double nmoves = state.moves.size();
   if (config.byoyomi_msec > 0) {
     double a = config.byoyomi()*2;
-    double tt = 120 + nmoves/5; // horizon
+    double tt = 80; // 120 + nmoves/5; // horizon
     double t = (nmoves < tt) ? (tt - nmoves)/2+1 : 10; // distance to horizon
     if (a < 1.0 * left / t)
       a = 1.0 * left / t;
     int hard = a*3 < left ? a*3 : left;
+    hard = std::min(hard, (int)a*4);
     return std::make_pair(a, hard);
   }
   if (left < 20) {
@@ -819,6 +820,7 @@ probeAndSplit(SearchNode& node, std::vector<UsiSlavePtr> slaves)
   const size_t first_n = std::min(moves.size(), nslaves-need_others);
   Logging::info("*probe normal "+path+" #"+to_s(nslaves)+"/"+to_s(need_others)
 		+"/"+to_s(first_n)+" "+fancyString(node, moves, first_n));
+  // TODO: others first?
   size_t i=0;
   for (; i<first_n; ++i) {
     SearchNode& n = *node.successor(moves[i]);
