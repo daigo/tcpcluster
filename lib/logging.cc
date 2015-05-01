@@ -12,7 +12,6 @@
 #include <iostream>
 #include <fstream>
 #include <ostream>
-#include <shared_mutex>
 
 // static const int debug = true;
 static const int debug = false;
@@ -24,8 +23,9 @@ static std::unique_ptr<boost::asio::ip::udp::socket> udp_socket;
 static std::unique_ptr<boost::asio::ip::udp::endpoint> udp_endpoint;
 static bool slave_udp = false;
 static std::unique_ptr<boost::asio::strand> log_strand;
+// If log_queue is available, prefix should be read and written within only
+// a log_queue thread (strand ensures serialized method invocations)
 static std::string prefix;
-static std::shared_timed_mutex mtx; // guard prefix
 std::string gpsshogi::Logging::directory = ".";
 
 void gpsshogi::
@@ -56,11 +56,6 @@ Logging::datetime()
   boost::posix_time::ptime now
     = boost::posix_time::microsec_clock::local_time();
   std::string ret = to_iso_extended_string(now);
-  {
-    std::shared_lock<std::shared_timed_mutex> lock(mtx);
-    if (prefix != "")
-      ret += " " + prefix;
-  }
   return ret;
 }
 
@@ -70,11 +65,6 @@ Logging::time()
   boost::posix_time::ptime now
     = boost::posix_time::microsec_clock::local_time();
   std::string ret = to_simple_string(now.time_of_day());
-  {
-    std::shared_lock<std::shared_timed_mutex> lock(mtx);
-    if (prefix != "")
-      ret += " " + prefix;
-  }
   return ret;
 }
 
@@ -84,44 +74,44 @@ Logging::error(const std::string& msg)
   const std::string now = datetime();
   writeLine(std::cerr, now + " error " + msg, true);
   if (os)
-    schedule(now + " error " + msg, log_queue, true, true);
+    schedule(now, " error " + msg, log_queue, true, true);
 }
 
 void gpsshogi::
 Logging::warn(const std::string& msg)
 {
   const std::string now = datetime();
-  schedule(now + " warning " + msg, log_queue, false);
+  schedule(now, " warning " + msg, log_queue, false);
   if (os)
-    schedule(now + " warning " + msg, log_queue, true, true);
+    schedule(now, " warning " + msg, log_queue, true, true);
 }
 
 void gpsshogi::
 Logging::notice(const std::string& msg)
 {
   const std::string now = datetime();
-  schedule(now + " " + msg, log_queue, false);
+  schedule(now, " " + msg, log_queue, false);
   if (os)
-    schedule(now + " " + msg, log_queue, true, true);
+    schedule(now, " " + msg, log_queue, true, true);
 }
 
 void gpsshogi::
 Logging::info(const std::string& msg, bool important)
 {
   const std::string now = time();
-  schedule(now + " info " + msg, log_queue, true, important);
+  schedule(now, " info " + msg, log_queue, (bool)os, important);
 }
 
 void gpsshogi::
-Logging::schedule(const std::string& msg,
+Logging::schedule(const std::string& time, const std::string& msg,
 		  boost::asio::io_service *log_queue,
 		  bool to_file, bool important)
 {
   if (log_queue && !debug)
-    log_queue->post(log_strand->wrap(std::bind(&Logging::writeLineTo,
+    log_queue->post(log_strand->wrap(std::bind(&Logging::writeLineTo, time,
 						 msg, to_file, important)));
   else
-    Logging::writeLineTo(msg, to_file && !debug, important);
+    Logging::writeLineTo(time, msg, to_file && !debug, important);
 }
 
 void gpsshogi::
@@ -132,12 +122,14 @@ Logging::writeLine(std::ostream& os, const std::string& msg, bool important)
     os << std::flush;
 }
 void gpsshogi::
-Logging::writeLineTo(std::string msg, bool to_file, bool important)
+Logging::writeLineTo(std::string time, std::string msg, bool to_file, bool important)
 {
+  if (prefix != "")
+    time += " " + prefix;
   if (to_file && os)
-    writeLine(*os, msg, important);
+    writeLine(*os, time+msg, important);
   else
-    writeLine(std::cerr, msg, important);
+    writeLine(std::cerr, time+msg, important);
 }
 
 void gpsshogi::
@@ -240,7 +232,6 @@ Logging::setPrefix(std::string new_prefix)
 void gpsshogi::
 Logging::setPrefixInQueue(std::string new_prefix)
 {
-  std::lock_guard<std::shared_timed_mutex> lock(mtx);
   prefix = new_prefix;
 }
 

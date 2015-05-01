@@ -20,8 +20,8 @@ namespace gpsshogi
     static const std::string time();
 
     static void writeLine(std::ostream& os, const std::string& msg, bool important);
-    static void writeLineTo(std::string msg, bool to_file, bool important=false);
-    static void schedule(const std::string& msg,
+    static void writeLineTo(std::string time, std::string msg, bool to_file, bool important=false);
+    static void schedule(const std::string& time, const std::string& msg,
 			 boost::asio::io_service*, bool to_file=true,
 			 bool important=false);
 
