@@ -1343,11 +1343,8 @@ finishIfStable()
     return;
   }
 
-  osl::milliseconds since_last_restart(0);
-  if (!searching().restarted.empty())
-    since_last_restart = osl::duration_cast<osl::milliseconds>(now - searching().restarted.back());
   if ((status == Thinking && elapsed > msec()) ||
-      (status == PanicTimeOther && since_last_restart.count() > msec())
+      (status == PanicTimeOther && elapsed > msecRestart())
       && root->bestMoveIsOther()) {
     tryExpandOther(elapsed);
   }
